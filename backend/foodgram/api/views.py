@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from djoser.views import TokenCreateView, TokenDestroyView
 
 from recipes.models import User, Tag, Ingredient, Recipe
-from api.permissions import IsAdminOrOwnerOrReadOnly
+from api.permissions import IsAdminOrOwnerOrReadOnly, IsAuthenticatedForDetail
 from api.serializers import (
     UserSerializer,
     PasswordSerializer,
@@ -22,6 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
     # TODO: добавить поле is_subscribed
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticatedForDetail,]
     lookup_value_regex = '[^/.]+'
 
     def create(self, request, *args, **kwargs):
