@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from recipes.models import User
+from recipes.models import User, Tag, Ingredient, Recipe
+from api.validators import validate_username
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -8,6 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         max_length=150,
         validators=[
+            validate_username,
             UniqueValidator(queryset=User.objects.all())
         ]
     )
@@ -29,12 +31,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username',
             'email',
+            'id',
+            'username',
             'first_name',
             'last_name',
+            'is_subscribed',
             'password',
-            'id'
         ]
         lookup_field = 'username'
 
@@ -98,3 +101,41 @@ class PasswordSerializer(serializers.Serializer):
                 "Неверно имя пользователя или пароль"
             )
         return data
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """Сериализатор для тегов."""
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор для инградиентов."""
+    class Meta:
+        model = Ingredient
+        fields = '__all__'
+
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для изменения рецептов."""
+    tags = serializers.SlugRelatedField(
+        many=True,
+        queryset=Tag.objects.all(),
+        slug_field='id'
+    )
+
+    class Meta:
+        model = Recipe
+        exclude = ['author']
+
+
+class RecipeGetSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения рецептов."""
+    tags = TagSerializer(many=True)
+    ingredients = IngredientSerializer(many=True)
+    author = UserSerializer()
+
+    class Meta:
+        model = Recipe
+        fields = '__all__'

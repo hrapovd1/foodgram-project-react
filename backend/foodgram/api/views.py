@@ -1,16 +1,25 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions, status
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.viewsets import GenericViewSet
 from django.shortcuts import get_object_or_404
-from djoser.views import TokenCreateView
+from djoser.views import TokenCreateView, TokenDestroyView
 
-from recipes.models import User
-from api.serializers import UserSerializer, PasswordSerializer
+from recipes.models import User, Tag, Ingredient, Recipe
+from api.permissions import IsAdminOrOwnerOrReadOnly
+from api.serializers import (
+    UserSerializer,
+    PasswordSerializer,
+    TagSerializer,
+    IngredientSerializer,
+    RecipeGetSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для доступа к пользователям."""
+    # TODO: добавить поле is_subscribed
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_value_regex = '[^/.]+'
@@ -87,3 +96,43 @@ class UserViewSet(viewsets.ModelViewSet):
 class AuthTokenView(TokenCreateView):
     """View класс для получения токена."""
     permission_classes = [permissions.AllowAny]
+
+
+class AuthTokenLogoutView(TokenDestroyView):
+    """View класс для удаления токена."""
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ListRetrieveViewSet(
+    ListModelMixin,
+    RetrieveModelMixin,
+    GenericViewSet
+):
+    """Общий viewset для использования в других viewsets."""
+
+
+class TagViewSet(ListRetrieveViewSet):
+    """ViewSet для доступа к тегам."""
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = [permissions.AllowAny,]
+    pagination_class = None
+
+
+class IngredientViewSet(ListRetrieveViewSet):
+    """ViewSet для доступа к инградиентам."""
+    # TODO: сменить search parameter  на name через Custom Filter
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    permission_classes = [permissions.AllowAny,]
+    pagination_class = None
+    filter_backends = [filters.SearchFilter,]
+    search_fields = ['^name',]
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    """ViewSet для рецептов."""
+    # TODO: Сделалать фильтрацию по query parameters
+    queryset = Recipe.objects.all()
+    permission_classes = [IsAdminOrOwnerOrReadOnly,]
+    serializer_class = RecipeGetSerializer

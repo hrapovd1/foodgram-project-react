@@ -20,6 +20,8 @@ class User(AbstractUser):
     def is_admin(self):
         return self.role == User.ADMIN
 
+    is_subscribed = models.BooleanField(default=False)
+
     class Meta:
         ordering = ['username']
 
@@ -28,7 +30,6 @@ class Ingredient(models.Model):
     """Модель для инградиентов."""
     name = models.CharField(max_length=100)
     measurement_unit = models.CharField(max_length=30)
-    amount = models.PositiveSmallIntegerField()
 
 
 class Tag(models.Model):
@@ -59,10 +60,6 @@ class Recipe(models.Model):
         verbose_name='Текстовое описание',
         help_text='Заполните текстовое описание'
     )
-    ingredients = models.ManyToManyField(
-        Ingredient,
-        related_name='ingedients'
-    )
     tags = models.ManyToManyField(
         Tag,
         related_name='tags'
@@ -71,6 +68,21 @@ class Recipe(models.Model):
         verbose_name='Время приготовления в мин.',
         help_text='Заполните время приготовления'
     )
+
+
+class RecipeIngredients(models.Model):
+    """Модель связи рецепта с инградиентами."""
+    recipe = models.ForeignKey(
+        Recipe,
+        null=True,
+        on_delete=models.CASCADE
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        null=True,
+        on_delete=models.CASCADE
+    )
+    amount = models.PositiveSmallIntegerField()
 
 
 class ShoppingCart(models.Model):
