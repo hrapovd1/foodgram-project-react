@@ -26,10 +26,41 @@ class User(AbstractUser):
         ordering = ['username']
 
 
+class Subscription(models.Model):
+    """Модель для подписок на авторов."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subscriber',
+        verbose_name='Пользователь'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='publisher',
+        verbose_name='Автор'
+    )
+
+    class Meta:
+        models.UniqueConstraint(
+            fields=['subscriber', 'publisher'],
+            name='unique_subscription'
+        )
+
+
 class Ingredient(models.Model):
     """Модель для инградиентов."""
     name = models.CharField(max_length=100)
     measurement_unit = models.CharField(max_length=30)
+
+
+class RecipeIngredients(models.Model):
+    """Модель связи рецепта с инградиентами."""
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.DO_NOTHING
+    )
+    amount = models.PositiveSmallIntegerField()
 
 
 class Tag(models.Model):
@@ -41,12 +72,23 @@ class Tag(models.Model):
 
 class Recipe(models.Model):
     """Модель рецептов."""
+    tags = models.ManyToManyField(
+        Tag,
+        related_name='tags'
+    )
     author = models.ForeignKey(
         User,
         related_name='author',
         verbose_name='Автор',
         on_delete=models.CASCADE
     )
+    ingredients = models.ManyToManyField(
+        RecipeIngredients,
+        related_name='recipe',
+        verbose_name='Инградиент'
+    )
+    is_favorited = models.BooleanField(default=False)
+    is_in_shopping_cart = models.BooleanField(default=False)
     name = models.CharField(
         'Рецепт',
         max_length=200,
@@ -60,29 +102,10 @@ class Recipe(models.Model):
         verbose_name='Текстовое описание',
         help_text='Заполните текстовое описание'
     )
-    tags = models.ManyToManyField(
-        Tag,
-        related_name='tags'
-    )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления в мин.',
         help_text='Заполните время приготовления'
     )
-
-
-class RecipeIngredients(models.Model):
-    """Модель связи рецепта с инградиентами."""
-    recipe = models.ForeignKey(
-        Recipe,
-        null=True,
-        on_delete=models.CASCADE
-    )
-    ingredient = models.ForeignKey(
-        Ingredient,
-        null=True,
-        on_delete=models.CASCADE
-    )
-    amount = models.PositiveSmallIntegerField()
 
 
 class ShoppingCart(models.Model):
@@ -125,26 +148,4 @@ class Favorite(models.Model):
         models.UniqueConstraint(
             fields=['reader', 'likerecipe'],
             name='unique_likerecipe'
-        )
-
-
-class Subscription(models.Model):
-    """Модель для подписок на авторов."""
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='subscriber',
-        verbose_name='Пользователь'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='publisher',
-        verbose_name='Автор'
-    )
-
-    class Meta:
-        models.UniqueConstraint(
-            fields=['subscriber', 'publisher'],
-            name='unique_subscription'
         )

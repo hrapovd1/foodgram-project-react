@@ -1,6 +1,7 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from recipes.models import User, Tag, Ingredient, Recipe
+from recipes.models import User, Tag, Ingredient, Recipe, RecipeIngredients
 from api.validators import validate_username
 
 
@@ -110,11 +111,41 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class IngredientSerializer(serializers.ModelSerializer):
+class IngredientGetSerializer(serializers.ModelSerializer):
     """Сериализатор для инградиентов."""
     class Meta:
         model = Ingredient
         fields = '__all__'
+
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор для инградиентов."""
+    id = serializers.SerializerMethodField('get_ingredient')
+
+    class Meta:
+        model = RecipeIngredients
+        fields = ['id', 'amount']
+
+    def get_ingredient(self, obj):
+        return obj.ingredient.id
+
+
+class IngredientWriteField(serializers.RelatedField):
+    """Поле для инградиента в сериализаторе записи рецепта."""
+    def to_representation(self, value):
+        """Функция получения значения из базы."""
+        return value
+
+    def to_internal_value(self, data):
+        """Функция записи значения в базу."""
+        try:
+            ingredient = Ingredient.objects.get(id=data['id'])
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError({'id': 'doesnt exists'})
+        return RecipeIngredients.objects.create(
+            ingredient=ingredient,
+            amount=data['amount'],
+        )
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -124,16 +155,39 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         slug_field='id'
     )
+    ingredients = IngredientWriteField(
+        many=True,
+        queryset=RecipeIngredients.objects.all(),
+    )
+    author = UserSerializer(required=False)
+
+    def create(self, validated_data):
+        print(f'serializer_create: {validated_data}')
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipe.objects.create(
+            author=self.context['request'].user,
+            **validated_data,
+        )
+        recipe.tags.set(tags)
+        recipe.ingredients.set(ingredients)
+        return recipe
+
+    def to_representation(self, instance):
+        return RecipeGetSerializer(
+            instance=instance,
+            context=self.context
+        ).data
 
     class Meta:
         model = Recipe
-        exclude = ['author']
+        fields = '__all__'
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     """Сериализатор для получения рецептов."""
     tags = TagSerializer(many=True)
-    ingredients = IngredientSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(many=True)
     author = UserSerializer()
 
     class Meta:

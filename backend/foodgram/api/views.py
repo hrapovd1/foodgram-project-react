@@ -13,8 +13,10 @@ from api.serializers import (
     UserSerializer,
     PasswordSerializer,
     TagSerializer,
-    IngredientSerializer,
-    RecipeGetSerializer)
+    IngredientGetSerializer,
+    RecipeGetSerializer,
+    RecipeWriteSerializer,
+)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -124,7 +126,7 @@ class IngredientViewSet(ListRetrieveViewSet):
     """ViewSet для доступа к инградиентам."""
     # TODO: сменить search parameter  на name через Custom Filter
     queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
+    serializer_class = IngredientGetSerializer
     permission_classes = [permissions.AllowAny,]
     pagination_class = None
     filter_backends = [filters.SearchFilter,]
@@ -136,4 +138,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     # TODO: Сделалать фильтрацию по query parameters
     queryset = Recipe.objects.all()
     permission_classes = [IsAdminOrOwnerOrReadOnly,]
-    serializer_class = RecipeGetSerializer
+
+    def get_serializer_class(self):
+        """Выбор сериализатора в зависимости от метода"""
+        if self.action == 'create':
+            return RecipeWriteSerializer
+        return RecipeGetSerializer
