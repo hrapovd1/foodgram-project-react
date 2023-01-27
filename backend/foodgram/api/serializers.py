@@ -1,13 +1,9 @@
+from api.validators import validate_username
 from django.core.exceptions import ObjectDoesNotExist
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
+                            ShoppingCart, Subscription, Tag, User)
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from recipes.models import (
-    User, Tag, Ingredient,
-    Recipe, RecipeIngredients,
-    Favorite, ShoppingCart,
-    Subscription,
-)
-from api.validators import validate_username
 
 
 class UserSerializer(serializers.ModelSerializer):

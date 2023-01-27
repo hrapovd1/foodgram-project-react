@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 
 class User(AbstractUser):
@@ -13,7 +13,8 @@ class User(AbstractUser):
     role = models.CharField(
         choices=ROLES,
         default=USER,
-        max_length=30
+        max_length=30,
+        verbose_name='РОЛЬ'
     )
 
     @property
@@ -22,6 +23,10 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ['username']
+        verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return self.username
 
 
 class Subscription(models.Model):
@@ -48,8 +53,14 @@ class Subscription(models.Model):
 
 class Ingredient(models.Model):
     """Модель для инградиентов."""
-    name = models.CharField(max_length=100)
-    measurement_unit = models.CharField(max_length=30)
+    name = models.CharField(max_length=100, verbose_name='Название')
+    measurement_unit = models.CharField(max_length=30, verbose_name='Ед. изм.')
+
+    class Meta:
+        verbose_name_plural = 'Инградиенты'
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeIngredients(models.Model):
@@ -60,6 +71,9 @@ class RecipeIngredients(models.Model):
     )
     amount = models.PositiveSmallIntegerField()
 
+    def __str__(self):
+        return self.ingredient.name
+
 
 class Tag(models.Model):
     """Модель для тегов."""
@@ -67,28 +81,34 @@ class Tag(models.Model):
     slug = models.SlugField(unique=True)
     color = models.CharField(max_length=10)
 
+    class Meta:
+        verbose_name_plural = 'Теги'
+
+    def __str__(self):
+        return self.name
+
 
 class Recipe(models.Model):
     """Модель рецептов."""
     tags = models.ManyToManyField(
         Tag,
-        related_name='tags'
+        related_name='recipe_tags',
+        verbose_name='Теги'
     )
     author = models.ForeignKey(
         User,
-        related_name='author',
+        related_name='recipe_author',
         verbose_name='Автор',
         on_delete=models.CASCADE
     )
     ingredients = models.ManyToManyField(
         RecipeIngredients,
-        related_name='recipe',
-        verbose_name='Инградиент'
+        related_name='recipe_ingredients',
+        verbose_name='Инградиенты'
     )
     name = models.CharField(
-        'Рецепт',
         max_length=200,
-        help_text='Введите название рецепта'
+        verbose_name='Название'
     )
     image = models.TextField(
         verbose_name='Изображение блюда',
@@ -105,6 +125,10 @@ class Recipe(models.Model):
 
     class Meta:
         ordering = ['id']
+        verbose_name_plural = 'Рецепты'
+
+    def __str__(self):
+        return self.name
 
 
 class ShoppingCart(models.Model):

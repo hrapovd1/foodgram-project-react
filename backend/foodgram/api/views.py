@@ -1,33 +1,24 @@
 from csv import writer
-from rest_framework import viewsets, filters
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import permissions, status
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
-from rest_framework.viewsets import GenericViewSet
+
+from api.permissions import IsAdminOrOwnerOrReadOnly, IsAuthenticatedForDetail
+from api.serializers import (FavoriteShoppingCartSerializer,
+                             IngredientGetSerializer, PasswordSerializer,
+                             RecipeGetSerializer, RecipeWriteSerializer,
+                             SubscribeSerializer, TagSerializer,
+                             UserSerializer)
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Count, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import TokenCreateView, TokenDestroyView
-
-from recipes.models import (
-    User, Tag, Ingredient,
-    Recipe, Favorite, ShoppingCart,
-    Subscription,
-)
-from api.permissions import IsAdminOrOwnerOrReadOnly, IsAuthenticatedForDetail
-from api.serializers import (
-    UserSerializer,
-    PasswordSerializer,
-    TagSerializer,
-    IngredientGetSerializer,
-    RecipeGetSerializer,
-    RecipeWriteSerializer,
-    FavoriteShoppingCartSerializer,
-    SubscribeSerializer,
-)
+from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
+                            Subscription, Tag, User)
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
