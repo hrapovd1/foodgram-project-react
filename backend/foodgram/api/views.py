@@ -32,6 +32,7 @@ from api.serializers import (
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для доступа к пользователям."""
+    # TODO: query params: page, limit
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticatedForDetail,]
@@ -156,6 +157,7 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def subscriptions(self, request):
         """Возвращает список подписки"""
+        # TODO: query params: page, limit, recipes_limit
         user = get_object_or_404(User, username=request.user)
         queryset = (
             User.objects.filter(
@@ -205,7 +207,7 @@ class TagViewSet(ListRetrieveViewSet):
 
 class IngredientViewSet(ListRetrieveViewSet):
     """ViewSet для доступа к инградиентам."""
-    # TODO: сменить search parameter  на name через Custom Filter
+    # TODO: query params: name
     queryset = Ingredient.objects.all()
     serializer_class = IngredientGetSerializer
     permission_classes = [permissions.AllowAny,]
@@ -216,7 +218,8 @@ class IngredientViewSet(ListRetrieveViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для рецептов."""
-    # TODO: Сделалать фильтрацию по query parameters
+    # TODO: query params: page, limit,
+    # is_favorited, is_in_shopping_cart, author, tags
     queryset = Recipe.objects.all()
     permission_classes = [IsAdminOrOwnerOrReadOnly,]
     lookup_field = 'id'
