@@ -20,8 +20,6 @@ class User(AbstractUser):
     def is_admin(self):
         return self.role == User.ADMIN
 
-    is_subscribed = models.BooleanField(default=False)
-
     class Meta:
         ordering = ['username']
 
@@ -43,7 +41,7 @@ class Subscription(models.Model):
 
     class Meta:
         models.UniqueConstraint(
-            fields=['subscriber', 'publisher'],
+            fields=['user', 'author'],
             name='unique_subscription'
         )
 
@@ -87,8 +85,6 @@ class Recipe(models.Model):
         related_name='recipe',
         verbose_name='Инградиент'
     )
-    is_favorited = models.BooleanField(default=False)
-    is_in_shopping_cart = models.BooleanField(default=False)
     name = models.CharField(
         'Рецепт',
         max_length=200,
@@ -107,6 +103,9 @@ class Recipe(models.Model):
         help_text='Заполните время приготовления'
     )
 
+    class Meta:
+        ordering = ['id']
+
 
 class ShoppingCart(models.Model):
     """Модель списков покупок."""
@@ -118,14 +117,14 @@ class ShoppingCart(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipe',
+        related_name='shoppingcart',
         verbose_name='Рецепт'
     )
 
     class Meta:
         models.UniqueConstraint(
-            fields=['owner', 'recipe'],
-            name='unique_recipe'
+            fields=['user', 'recipe'],
+            name='unique_shopping_cart'
         )
 
 
@@ -140,12 +139,12 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='likerecipe',
+        related_name='favorite',
         verbose_name='Рецепт'
     )
 
     class Meta:
         models.UniqueConstraint(
-            fields=['reader', 'likerecipe'],
-            name='unique_likerecipe'
+            fields=['user', 'recipe'],
+            name='unique_favorite'
         )

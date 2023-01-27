@@ -1,13 +1,22 @@
+from csv import writer
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.viewsets import GenericViewSet
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
+from django.db.models import Count, Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import TokenCreateView, TokenDestroyView
 
-from recipes.models import User, Tag, Ingredient, Recipe
+from recipes.models import (
+    User, Tag, Ingredient,
+    Recipe, Favorite, ShoppingCart,
+    Subscription,
+)
 from api.permissions import IsAdminOrOwnerOrReadOnly, IsAuthenticatedForDetail
 from api.serializers import (
     UserSerializer,
@@ -16,15 +25,17 @@ from api.serializers import (
     IngredientGetSerializer,
     RecipeGetSerializer,
     RecipeWriteSerializer,
+    FavoriteShoppingCartSerializer,
+    SubscribeSerializer,
 )
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для доступа к пользователям."""
-    # TODO: добавить поле is_subscribed
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticatedForDetail,]
+    lookup_field = 'id'
     lookup_value_regex = '[^/.]+'
 
     def create(self, request, *args, **kwargs):
@@ -95,6 +106,76 @@ class UserViewSet(viewsets.ModelViewSet):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def subscribe(self, request, id):
+        """Реализует добавление/удаление в список подписчиков"""
+        user = get_object_or_404(User, username=request.user)
+        author = get_object_or_404(User, id=id)
+        if self.request.method == 'POST':
+            if Subscription.objects.filter(user=user, author=author).exists():
+                return Response(
+                    "Попытка повторного добавления",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                Subscription.objects.create(user=user, author=author)
+            except IntegrityError as err:
+                if 'unique constraint' in err.args:
+                    return Response(
+                        "Попытка повторного добавления",
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            serializer = UserSerializer(
+                author,
+                context={'request': request})
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        try:
+            author = Subscription.objects.get(
+                user=user, author=author,
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                "Попытка не существующего удаления",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        author.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def subscriptions(self, request):
+        """Возвращает список подписки"""
+        user = get_object_or_404(User, username=request.user)
+        queryset = (
+            User.objects.filter(
+                id__in=Subscription
+                .objects.filter(user=user)
+                .values_list('author', flat=True)
+            )
+        )
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = SubscribeSerializer(
+                page,
+                many=True,
+                context={'request': request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class AuthTokenView(TokenCreateView):
     """View класс для получения токена."""
@@ -138,9 +219,123 @@ class RecipeViewSet(viewsets.ModelViewSet):
     # TODO: Сделалать фильтрацию по query parameters
     queryset = Recipe.objects.all()
     permission_classes = [IsAdminOrOwnerOrReadOnly,]
+    lookup_field = 'id'
 
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от метода"""
         if self.action == 'create':
             return RecipeWriteSerializer
         return RecipeGetSerializer
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def shopping_cart(self, request, id):
+        """Реализует добавление/удаление в список покупок"""
+        user = get_object_or_404(User, username=request.user)
+        recipe = get_object_or_404(Recipe, id=id)
+        if self.request.method == 'POST':
+            if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+                return Response(
+                    "Попытка повторного добавления",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                ShoppingCart.objects.create(user=user, recipe=recipe)
+            except IntegrityError as err:
+                if 'unique constraint' in err.args:
+                    return Response(
+                        "Попытка повторного добавления",
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            serializer = FavoriteShoppingCartSerializer(recipe)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        try:
+            recipe_in_cart = ShoppingCart.objects.get(
+                user=user, recipe=recipe,
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                "Попытка не существующего удаления",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        recipe_in_cart.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def favorite(self, request, id):
+        """Реализует добавление/удаление в избранное"""
+        user = get_object_or_404(User, username=request.user)
+        recipe = get_object_or_404(Recipe, id=id)
+        if self.request.method == 'POST':
+            if Favorite.objects.filter(user=user, recipe=recipe).exists():
+                return Response(
+                    "Попытка повторного добавления",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                Favorite.objects.create(user=user, recipe=recipe)
+            except IntegrityError as err:
+                if 'unique constraint' in err.args:
+                    return Response(
+                        "Попытка повторного добавления",
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            serializer = FavoriteShoppingCartSerializer(recipe)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        try:
+            favorite = Favorite.objects.get(
+                user=user, recipe=recipe,
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                "Попытка не существующего удаления",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def download_shopping_cart(self, request):
+        """Реализует получение списка инградиентов из рецептов"""
+        user = get_object_or_404(User, username=request.user)
+        result = (ShoppingCart.objects
+                  .filter(user=user).select_related('recipe')
+                  .values(
+                      'recipe__ingredients__ingredient__name',
+                      'recipe__ingredients__ingredient__measurement_unit'
+                  ).annotate(
+                      names=Count('recipe__ingredients__ingredient__name'),
+                      amount=Sum('recipe__ingredients__amount')
+                  ).order_by())
+        response = HttpResponse(
+            content_type='text/csv',
+        )
+        response['Content-Disposition'] = (
+            'attachment; filename=ingredients.csv')
+        csv_writer = writer(response)
+        for line in result:
+            csv_writer.writerow([
+                line['recipe__ingredients__ingredient__name'],
+                line['recipe__ingredients__ingredient__measurement_unit'],
+                line['amount'],
+            ])
+        return response
