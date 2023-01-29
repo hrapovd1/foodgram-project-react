@@ -23,7 +23,6 @@ from rest_framework.viewsets import GenericViewSet
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для доступа к пользователям."""
-    # TODO: query params: page, limit
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticatedForDetail,]
@@ -148,7 +147,7 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def subscriptions(self, request):
         """Возвращает список подписки"""
-        # TODO: query params: page, limit, recipes_limit
+        # TODO: query params: recipes_limit
         user = get_object_or_404(User, username=request.user)
         queryset = (
             User.objects.filter(
@@ -209,11 +208,15 @@ class IngredientViewSet(ListRetrieveViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для рецептов."""
-    # TODO: query params: page, limit,
+    # TODO: query params:
     # is_favorited, is_in_shopping_cart, author, tags
-    queryset = Recipe.objects.all()
     permission_classes = [IsAdminOrOwnerOrReadOnly,]
     lookup_field = 'id'
+
+    def get_queryset(self):
+        """Получение выборки по параметрам запроса"""
+        # TODO: распарсить параметры и сделать запрос
+        return Recipe.objects.all()
 
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от метода"""

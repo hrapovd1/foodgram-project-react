@@ -128,13 +128,23 @@ class IngredientGetSerializer(serializers.ModelSerializer):
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для инградиентов в рецепте."""
     id = serializers.SerializerMethodField('get_ingredient')
+    name = serializers.SerializerMethodField('get_name')
+    measurement_unit = serializers.SerializerMethodField(
+        'get_measurement_unit'
+    )
 
     class Meta:
         model = RecipeIngredients
-        fields = ['id', 'amount']
+        fields = ['id', 'name', 'measurement_unit', 'amount']
 
     def get_ingredient(self, obj):
         return obj.ingredient.id
+
+    def get_name(self, obj):
+        return obj.ingredient.name
+
+    def get_measurement_unit(self, obj):
+        return obj.ingredient.measurement_unit
 
 
 class IngredientWriteField(serializers.RelatedField):
