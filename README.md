@@ -1,18 +1,84 @@
-# praktikum_new_diplom
-READY:
+# Проект Foodgram, «Продуктовый помощник»
 
-* GET /api/ingredients/ 
-* GET /api/ingredients/{id}/
-* GET /api/users/ 
-* POST /api/users/ 
-* GET /api/users/{id}/
-* GET /api/users/me/
-* POST /api/users/set_password/
-* POST /api/auth/token/login/
-* POST /api/auth/token/logout/
-* GET /api/tags/
-* GET /api/tags/{id}/
 
-TODO:
+**Документация по API приложения доступно по адресу [hrapovd.sytes.net](http://hrapovd.sytes.net/api/docs/redoc.html)**
 
-* GET /api/users/ , query parameters
+### Описание
+Cервис позволяет публиковать рецепты, подписываться на публикации других пользователей,
+добавлять понравившиеся рецепты в список «Избранное», а перед походом в магазин
+скачивать сводный список продуктов, необходимых для приготовления одного или
+нескольких выбранных блюд.
+
+### Техническое описание
+К проекту по адресу <http://hrapovd.sytes.net/api/docs/redoc.html> подключена документация API.  
+В ней описаны возможные запросы к API и структура ожидаемых ответов. Для каждого запроса  
+указаны уровни прав доступа: пользовательские роли, которым разрешён запрос.
+
+#### Фронтенд
+Предоставлен командой курса.
+
+#### Бекенд
+- [Python] v3.7
+- [Django] v2.2.28
+- [Django REST framework] v3.13.1
+- [SimpleJWT] v4.8.0
+- [PostgreSQL] 13
+
+### Пользовательские роли
+- **Аноним** — может просматривать список рецептов и отдельные рецепты, фильтровать по тегам вывод.
+- **Аутентифицированный пользователь** (`user`) — может просматривать всё, как и Аноним, а так же создавать новые рецепты, добавлять рецепты других пользователей в "Избранное" и "Список покупок" из которого потом можно скачать ингредиенты в виде файла.
+- **Администратор** (`admin`) — полные права на управление всем контентом проекта. 
+Так же доступен администраторская [страница](http://hrapovd.sytes.net/admin/) на которой можно добавить/удалить теги и инградиенты.
+### Запуск проекта
+#### Минимальные требования к инфраструктуре:
+
+- Docker Engine 20.10.0+
+- docker compose 1.29.2
+
+#### Установка переменных среды.
+Для корректного запуска необходимо создать файл .env с переменными:
+```BASH
+cd infra
+touch .env
+```
+Затем необходимо заполнить его следующими переменными:
+```BASH
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+```
+Для запуска в продакшен среде необходимо создать отдельную базу для приложения, создать пользователя для этой базы и внести эти данные в .env файл.
+
+
+#### Запуск
+```BASH
+cd infra
+docker-compose up -d
+``` 
+- Настройка БД: 
+```BASH
+docker-compose exec web python3 manage.py migrate
+```
+- Создаем супер пользователя: 
+```BASH
+docker-compose exec web python3 manage.py createsuperuser
+```
+- Собираем статические файлы для корректного отображения страниц: 
+```BASH
+docker-compose exec web python3 manage.py collectstatic --noinput
+```
+- При желании можно импортировать тестовые данные из файлов csv, которые расположены в папке `data/`:
+```BASH
+docker-compose exec web python3 manage.py importcsv
+```
+    После этого необходимо еще раз добавить суперпользователя, т.к. ранее созданный сбивается после импорта тестовых данных.
+
+[//]: # 
+  [Python]: <https://www.python.org>
+  [Django REST framework]: <https://www.django-rest-framework.org>
+  [Django]: <https://www.djangoproject.com>
+  [SimpleJWT]: <https://django-rest-framework-simplejwt.readthedocs.io/en/latest/>
+  [PostgreSQL]: <https://www.postgresql.org/>

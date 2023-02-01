@@ -110,7 +110,8 @@ class Recipe(models.Model):
         max_length=200,
         verbose_name='Название'
     )
-    image = models.TextField(
+    image = models.ImageField(
+        upload_to='recipes',
         verbose_name='Изображение блюда',
         help_text='Картинка, закодированная в Base64'
     )
@@ -122,9 +123,10 @@ class Recipe(models.Model):
         verbose_name='Время приготовления в мин.',
         help_text='Заполните время приготовления'
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['id']
+        ordering = ['-created_at']
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):

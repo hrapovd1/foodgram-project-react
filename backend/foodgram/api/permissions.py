@@ -1,24 +1,15 @@
 from rest_framework import permissions
 
 
-class IsAdminOrOwnerOrReadOnly(permissions.BasePermission):
+class IsAuthenticatedOrReadOnly(permissions.BasePermission):
     """
-    Полное разрешение для Администратора и Владельца,
+    Полное разрешение для аутентифицированных пользователей,
     только чтение для остальных.
     """
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        if not request.user.is_authenticated:
-            return False
-        return (
-            request.user.is_admin or (
-                obj.author == request.user
-            )
-        )
 
 
 class IsAuthenticatedForDetail(permissions.BasePermission):
@@ -27,4 +18,6 @@ class IsAuthenticatedForDetail(permissions.BasePermission):
     пользователей.
     """
     def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return request.user.is_authenticated

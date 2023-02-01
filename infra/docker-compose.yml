@@ -24,14 +24,14 @@ services:
     depends_on:
       - db 
     restart: always
+    env_file:
+      - ./.env
     volumes:
       - static_vol:/app/static/
       - media_vol:/app/media/
       - ../data/:/app/static/data/
   db:
     image: postgres:13.3-alpine
-    ports:
-      - "5432:5432"
     volumes:
       - db_vol:/var/lib/postgresql/data/
     env_file:

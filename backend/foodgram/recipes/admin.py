@@ -16,7 +16,7 @@ class UserAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     """Класс представления модели рецептов"""
     list_display = ('name', 'author')
-    search_fields = ('name', 'tags__name')
+    search_fields = ('name', 'tags__name', 'author__first_name')
     fields = (
         'tags', 'author', 'ingredients', 'name',
         'image', 'text', 'cooking_time', 'favorite',
@@ -30,7 +30,7 @@ class RecipeAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     """Класс представление инградиентов"""
     list_display = ('name', 'measurement_unit')
-    search_fields = ('name',)
+    search_fields = ('^name',)
 
 
 admin.site.unregister(Group)
