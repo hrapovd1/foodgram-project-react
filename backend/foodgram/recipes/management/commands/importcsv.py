@@ -1,16 +1,15 @@
 import csv
-
 from foodgram.settings import STATIC_ROOT
-from os.path import join
 from django.core.management.base import BaseCommand
+from os import path
 from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
     """Обработчик менеджмент-команды по импорту csv-данных в БД."""
     def handle(self, *args, **options):
-        data_path = join(STATIC_ROOT, 'data')
-        self.import_ingredients(join(data_path, 'ingredients.csv'))
+        data_path = path.join(STATIC_ROOT, 'data')
+        self.import_ingredients(path.join(data_path, 'ingredients.csv'))
 
     def import_csv_file(self, conn, table_name, csv_file):
         cur = conn.cursor()
