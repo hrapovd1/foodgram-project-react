@@ -60,6 +60,11 @@ jobs:
           cd infra
           echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASS }} >> .env
           sudo docker-compose up -d
+  notify:
+
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Notify
       uses: appleboy/telegram-action@master
       with:
