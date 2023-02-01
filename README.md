@@ -60,21 +60,27 @@ docker-compose up -d
 ``` 
 - Настройка БД: 
 ```BASH
-docker-compose exec web python3 manage.py migrate
-```
-- Создаем супер пользователя: 
-```BASH
-docker-compose exec web python3 manage.py createsuperuser
+docker-compose exec app python3 manage.py migrate
 ```
 - Собираем статические файлы для корректного отображения страниц: 
 ```BASH
-docker-compose exec web python3 manage.py collectstatic --noinput
+docker-compose exec app python3 manage.py collectstatic --noinput
 ```
-- При желании можно импортировать тестовые данные из файлов csv, которые расположены в папке `data/`:
+- Создаем супер пользователя: 
 ```BASH
-docker-compose exec web python3 manage.py importcsv
+docker-compose exec app python3 manage.py createsuperuser
 ```
-    После этого необходимо еще раз добавить суперпользователя, т.к. ранее созданный сбивается после импорта тестовых данных.
+- При желании импортируем тестовые данные, для демонстрации: 
+```BASH
+docker-compose exec app python3 manage.py loaddata static/data/dump.json
+```
+В результате создадуться пользователи:
+  
+    * test@local.net (пароль: 1234.Rewq)
+    * test1@local.net (пароль: 1234.Rewq)
+    * admin@local.net (пароль: 1234.Rewq) - администратор
+и демонстрационные рецепты.
+
 
 [//]: # 
   [Python]: <https://www.python.org>

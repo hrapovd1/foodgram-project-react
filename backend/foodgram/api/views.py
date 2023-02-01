@@ -227,13 +227,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от метода"""
-        if self.action == 'create':
+        if (
+            self.action == 'create'
+            or self.action == 'update'
+            or self.action == 'partial_update'
+        ):
             return RecipeWriteSerializer
         return RecipeGetSerializer
 
     def list(self, request, *args, **kwargs):
         """Возвращает список рецептов с фильтрацией по параметрам"""
         tags = request.query_params.getlist('tags')
+        author = request.query_params.get('author')
         if request.user.is_authenticated:
             user = User.objects.get(username=request.user)
         else:
@@ -255,9 +260,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
                         .filter(user=user).values('recipe__id'))
             )
         else:
-            queryset = self.filter_queryset(self.get_queryset()).filter(
-                tags__slug__in=tags,
-            )
+            if author:
+                queryset = self.filter_queryset(self.get_queryset()).filter(
+                    tags__slug__in=tags, author=User.objects.get(id=author),
+                )
+            else:
+                queryset = self.filter_queryset(self.get_queryset()).filter(
+                    tags__slug__in=tags,
+                )
 
         page = self.paginate_queryset(queryset)
         if page is not None:

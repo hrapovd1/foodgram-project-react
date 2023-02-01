@@ -1,9 +1,12 @@
 from api.validators import validate_username
 from django.core.exceptions import ObjectDoesNotExist
+from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
                             ShoppingCart, Subscription, Tag, User)
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
+from foodgram import settings
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -177,6 +180,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         queryset=RecipeIngredients.objects.all(),
     )
     author = UserSerializer(required=False)
+    image = Base64ImageField()
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
@@ -205,6 +209,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(many=True)
     author = UserSerializer()
+    image = serializers.SerializerMethodField('get_image')
     is_favorited = serializers.SerializerMethodField('get_favorited')
     is_in_shopping_cart = serializers.SerializerMethodField(
         'get_shopping_cart'
@@ -236,6 +241,9 @@ class RecipeGetSerializer(serializers.ModelSerializer):
                     .filter(recipe=obj)
                     .exists())
         return False
+
+    def get_image(self, obj):
+        return f'{settings.MEDIA_URL}{obj.image}'
 
 
 class FavoriteShoppingCartSerializer(serializers.BaseSerializer):
