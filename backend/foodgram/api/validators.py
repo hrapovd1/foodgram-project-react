@@ -9,7 +9,7 @@ def validate_username(value):
         raise ValidationError(
             'username должен соответствовать шаблону ^[\\w.@+-]+\\z'
         )
-    elif value == 'me':
+    if value == 'me':
         raise ValidationError(
             'username не может быть me.'
         )

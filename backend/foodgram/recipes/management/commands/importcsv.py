@@ -1,10 +1,9 @@
 import csv
-from os.path import join
-
-from django.core.management.base import BaseCommand
-from recipes.models import Ingredient
 
 from foodgram.settings import STATIC_ROOT
+from django.core.management.base import BaseCommand
+from os.path import join
+from recipes.models import Ingredient
 
 
 class Command(BaseCommand):

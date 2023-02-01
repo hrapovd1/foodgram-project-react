@@ -25,7 +25,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для доступа к пользователям."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticatedForDetail,]
+    permission_classes = [IsAuthenticatedForDetail]
     lookup_field = 'id'
 
     def create(self, request, *args, **kwargs):
@@ -67,11 +67,10 @@ class UserViewSet(viewsets.ModelViewSet):
                 serializer.data,
                 status=status.HTTP_200_OK
             )
-        else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(
         detail=False,
@@ -195,7 +194,7 @@ class TagViewSet(ListRetrieveViewSet):
     """ViewSet для доступа к тегам."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny]
     pagination_class = None
 
 
@@ -203,7 +202,7 @@ class IngredientViewSet(ListRetrieveViewSet):
     """ViewSet для доступа к инградиентам."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientGetSerializer
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.AllowAny]
     pagination_class = None
 
     def list(self, request, *args, **kwargs):
@@ -223,7 +222,7 @@ class IngredientViewSet(ListRetrieveViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для рецептов."""
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly,]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     lookup_field = 'id'
 
     def get_serializer_class(self):

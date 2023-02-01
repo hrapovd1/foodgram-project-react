@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
-
-from .models import Recipe, Tag, User, Favorite, Ingredient
+from recipes.models import Recipe, Tag, User, Favorite, Ingredient
 
 
 class UserAdmin(admin.ModelAdmin):
