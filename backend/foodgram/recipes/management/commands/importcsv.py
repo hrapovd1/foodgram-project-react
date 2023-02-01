@@ -1,8 +1,8 @@
 import csv
-
-from foodgram.settings import STATIC_ROOT
-from django.core.management.base import BaseCommand
 from os import path
+
+from django.core.management.base import BaseCommand
+from foodgram.settings import STATIC_ROOT
 from recipes.models import Ingredient
 
 
