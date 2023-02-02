@@ -1,5 +1,6 @@
 # Проект Foodgram, «Продуктовый помощник»
 
+[![Python application](https://github.com/hrapovd1/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)](https://github.com/hrapovd1/foodgram-project-react/actions/workflows/foodgram_workflow.yml)
 
 **Документация по API приложения доступно по адресу [hrapovd.sytes.net](http://hrapovd.sytes.net/api/docs/redoc.html)**
 
