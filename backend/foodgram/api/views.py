@@ -228,12 +228,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от метода"""
         if (
-            self.action == 'create'
-            or self.action == 'update'
-            or self.action == 'partial_update'
+            self.action == 'list'
+            or self.action == 'retrieve'
         ):
-            return RecipeWriteSerializer
-        return RecipeGetSerializer
+            return RecipeGetSerializer
+        return RecipeWriteSerializer
 
     def list(self, request, *args, **kwargs):
         """Возвращает список рецептов с фильтрацией по параметрам"""
