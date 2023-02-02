@@ -60,7 +60,6 @@ jobs:
           fi
           git clone git@github.com:hrapovd1/foodgram-project-react.git
           cd foodgram-project-react
-          git checkout dev
           cd infra
           echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASS }} >> .env
           sudo docker-compose up -d
