@@ -161,6 +161,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
         page = self.paginate_queryset(queryset)
         if page is not None:
+            print(f'subscriptions page: {page}')
+            print(f'subscriptions request: {request}')
             serializer = SubscribeSerializer(
                 page,
                 many=True,
