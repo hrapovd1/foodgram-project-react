@@ -22,15 +22,14 @@ class RecipeQueryFilter(filters.BaseFilterBackend):
                         .filter(user=user).values('recipe__id'))
                 .filter(tags__slug__in=tags)
             )
-        elif user and shop_cart == '1':
+        if user and shop_cart == '1':
             return (
                 Recipe.objects
                 .filter(id__in=ShoppingCart.objects
                         .filter(user=user).values('recipe__id'))
             )
-        else:
-            if author:
-                return queryset.filter(
-                    tags__slug__in=tags, author=User.objects.get(id=author),
-                )
-            return queryset.filter(tags__slug__in=tags)
+        if author:
+            return queryset.filter(
+                tags__slug__in=tags, author=User.objects.get(id=author),
+            )
+        return queryset.filter(tags__slug__in=tags)

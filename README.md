@@ -72,7 +72,16 @@ docker-compose exec app python3 manage.py collectstatic --noinput
 docker-compose exec app python3 manage.py createsuperuser
 ```
 - При желании импортируем тестовые данные, для демонстрации: 
+  * Копирует изображения блюд в media volume:
 ```BASH
+docker-compose down
+cd ../backend/foodgram
+docker run --rm -it -v $(pwd)/media:/media -v infra_media_vol:/volume nginx:1.19.3 cp -r /media/recipes /volume/
+```
+  * Запускаем приложение и импортируем тестовые данные:
+```BASH
+cd ../../infra
+docker-compose up -d
 docker-compose exec app python3 manage.py loaddata static/data/dump.json
 ```
 В результате создадуться пользователи:
