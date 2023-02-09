@@ -7,8 +7,6 @@ on:
   push:
     branches:
     - master
-  pull_request:
-    branches: [ "master" ]
 
 permissions:
   contents: read
@@ -20,6 +18,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Packages update
+      run: |
+        sudo apt update && sudo apt dist-upgrade -y
+        sudo apt install curl
     - name: Set up Python 3.7
       uses: actions/setup-python@v2
       with:
@@ -56,19 +58,17 @@ jobs:
           fi
           git clone git@github.com:hrapovd1/foodgram-project-react.git
           cd foodgram-project-react
-          git checkout dev
           cd infra
           echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASS }} >> .env
           sudo docker-compose up -d
-  notify:
-
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Notify
-      uses: appleboy/telegram-action@master
+      uses: appleboy/ssh-action@master
       with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: ${{ github.workflow }} успешно выполнен! 
-
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          set +x
+          data="{\"chat_id\": \"${{ secrets.TELEGRAM_TO }}\", \"text\": \"${{ github.workflow }} успешно выполнен!\"}"
+          curl -X POST -H "Content-Type: application/json" -d "${data}" \
+          "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"
