@@ -1,4 +1,4 @@
-from api.validators import validate_username
+from api.validators import validate_username, validate_cooking_time
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
@@ -185,6 +185,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     )
     author = UserSerializer(required=False)
     image = Base64ImageField()
+    cooking_time = serializers.IntegerField(
+        validators=[validate_cooking_time]
+    )
 
     @transaction.atomic
     def create(self, validated_data):
