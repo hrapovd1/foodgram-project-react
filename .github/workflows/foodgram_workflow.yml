@@ -7,8 +7,6 @@ on:
   push:
     branches:
     - master
-  pull_request:
-    branches: [ "master" ]
 
 permissions:
   contents: read
@@ -64,7 +62,13 @@ jobs:
           echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASS }} >> .env
           sudo docker-compose up -d
     - name: Notify
-      run: |
-        data="{\"chat_id\": \"${{ secrets.TELEGRAM_TO }}\", \"text\": \"${{ github.workflow }} успешно выполнен!\"}"
-        curl -X POST -H "Content-Type: application/json" -d "${data}" \
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          set +x
+          data="{\"chat_id\": \"${{ secrets.TELEGRAM_TO }}\", \"text\": \"${{ github.workflow }} успешно выполнен!\"}"
+          curl -X POST -H "Content-Type: application/json" -d "${data}" \
           "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"

@@ -1,5 +1,6 @@
 from csv import writer
 
+from api.filters import RecipeQueryFilter
 from api.permissions import IsAuthenticatedForDetail, IsAuthenticatedOrReadOnly
 from api.serializers import (FavoriteShoppingCartSerializer,
                              IngredientGetSerializer, PasswordSerializer,
@@ -146,7 +147,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def subscriptions(self, request):
         """Возвращает список подписки"""
         user = get_object_or_404(User, username=request.user)
-        recipes_limit = request.query_params.get('recipes_limit')
 
         queryset = (
             User.objects.filter(
@@ -156,19 +156,15 @@ class UserViewSet(viewsets.ModelViewSet):
             )
         )
 
-        if recipes_limit is not None:
-            queryset = queryset[:int(recipes_limit)]
-
         page = self.paginate_queryset(queryset)
         if page is not None:
-            print(f'subscriptions page: {page}')
-            print(f'subscriptions request: {request}')
             serializer = SubscribeSerializer(
                 page,
                 many=True,
                 context={'request': request}
             )
-            return self.get_paginated_response(serializer.data)
+            data = serializer.data
+            return self.get_paginated_response(data)
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -224,6 +220,7 @@ class IngredientViewSet(ListRetrieveViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для рецептов."""
     queryset = Recipe.objects.all()
+    filter_backends = [RecipeQueryFilter]
     permission_classes = [IsAuthenticatedOrReadOnly]
     lookup_field = 'id'
 
@@ -236,47 +233,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeGetSerializer
         return RecipeWriteSerializer
 
-    def list(self, request, *args, **kwargs):
-        """Возвращает список рецептов с фильтрацией по параметрам"""
-        tags = request.query_params.getlist('tags')
-        author = request.query_params.get('author')
-        if request.user.is_authenticated:
-            user = User.objects.get(username=request.user)
-        else:
-            user = None
-        favor = request.query_params.get('is_favorited')
-        shop_cart = request.query_params.get('is_in_shopping_cart')
-
-        if user and favor == '1':
-            queryset = (
-                Recipe.objects
-                .filter(id__in=Favorite.objects
-                        .filter(user=user).values('recipe__id'))
-                .filter(tags__slug__in=tags)
-            )
-        elif user and shop_cart == '1':
-            queryset = (
-                Recipe.objects
-                .filter(id__in=ShoppingCart.objects
-                        .filter(user=user).values('recipe__id'))
-            )
-        else:
-            if author:
-                queryset = self.filter_queryset(self.get_queryset()).filter(
-                    tags__slug__in=tags, author=User.objects.get(id=author),
-                )
-            else:
-                queryset = self.filter_queryset(self.get_queryset()).filter(
-                    tags__slug__in=tags,
-                )
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    def filter_queryset(self, queryset):
+        """Выбор фильтра в зависимости от метода"""
+        if self.action == 'list':
+            return super().filter_queryset(queryset)
+        return queryset
 
     @action(
         detail=True,

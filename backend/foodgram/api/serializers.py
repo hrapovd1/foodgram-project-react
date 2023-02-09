@@ -59,6 +59,7 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         user = super().update(instance, validated_data)
         try:
@@ -256,7 +257,7 @@ class FavoriteShoppingCartSerializer(serializers.BaseSerializer):
         return {
             'id': instance.id,
             'name': instance.name,
-            'image': instance.image,
+            'image': f'{settings.MEDIA_URL}{instance.image}',
             'cooking_time': instance.cooking_time
         }
 
@@ -276,8 +277,12 @@ class SubscribeSerializer(UserSerializer):
 
     def get_recipes(self, obj):
         """Получение рецептов"""
+        limit = self.context['request'].query_params.get('recipes_limit')
+        query = Recipe.objects.filter(author=obj)
+        if limit is not None:
+            query = query[:int(limit)]
         recipes = FavoriteShoppingCartSerializer(
-            Recipe.objects.filter(author=obj),
+            query,
             many=True,
         )
         return recipes.data
