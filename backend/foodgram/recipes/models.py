@@ -17,16 +17,16 @@ class User(AbstractUser):
         verbose_name='РОЛЬ'
     )
 
-    @property
-    def is_admin(self):
-        return self.role == User.ADMIN
-
     class Meta:
         ordering = ['username']
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return self.username
+
+    @property
+    def is_admin(self):
+        return self.role == User.ADMIN
 
 
 class Subscription(models.Model):
