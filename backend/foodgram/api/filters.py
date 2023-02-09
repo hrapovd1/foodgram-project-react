@@ -1,5 +1,5 @@
+from recipes.models import Favorite, Recipe, ShoppingCart, User
 from rest_framework import filters
-from recipes.models import User, Recipe, Favorite, ShoppingCart
 
 
 class RecipeQueryFilter(filters.BaseFilterBackend):
