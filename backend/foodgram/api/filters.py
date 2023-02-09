@@ -16,25 +16,20 @@ class RecipeQueryFilter(filters.BaseFilterBackend):
         shop_cart = request.query_params.get('is_in_shopping_cart')
 
         if user and favor == '1':
-            queryset = (
+            return (
                 Recipe.objects
                 .filter(id__in=Favorite.objects
                         .filter(user=user).values('recipe__id'))
                 .filter(tags__slug__in=tags)
             )
-        elif user and shop_cart == '1':
-            queryset = (
+        if user and shop_cart == '1':
+            return (
                 Recipe.objects
                 .filter(id__in=ShoppingCart.objects
                         .filter(user=user).values('recipe__id'))
             )
-        else:
-            if author:
-                queryset = queryset.filter(
-                    tags__slug__in=tags, author=User.objects.get(id=author),
-                )
-            else:
-                queryset = queryset.filter(
-                    tags__slug__in=tags,
-                )
-        return queryset
+        if author:
+            return queryset.filter(
+                tags__slug__in=tags, author=User.objects.get(id=author),
+            )
+        return queryset.filter(tags__slug__in=tags)
