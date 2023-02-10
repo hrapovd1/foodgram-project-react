@@ -2,12 +2,11 @@ from api.validators import validate_cooking_time, validate_username
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
+from foodgram import settings
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
                             ShoppingCart, Subscription, Tag, User)
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-
-from foodgram import settings
 
 
 class UserSerializer(serializers.ModelSerializer):
