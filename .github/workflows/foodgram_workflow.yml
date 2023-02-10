@@ -38,8 +38,9 @@ jobs:
       run: |
         cd backend
         echo ${{ secrets.DOCKER_PASS }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-        docker build . -t hrapovd/foodgram_app:1.0
-        docker push hrapovd/foodgram_app:1.0
+        VERSION=$(cat VERSION)
+        docker build . -t hrapovd/foodgram_app:${VERSION}
+        docker push hrapovd/foodgram_app:${VERSION}
     - name: Deploy
       uses: appleboy/ssh-action@master
       with:
@@ -58,8 +59,10 @@ jobs:
           fi
           git clone git@github.com:hrapovd1/foodgram-project-react.git
           cd foodgram-project-react
+          VERSION=$(cat backend/VERSION)
           cd infra
-          echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASS }} >> .env
+          echo -e "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASS }}" >> .env
+          echo -e "VERSION=${VERSION}" >> .env
           sudo docker-compose up -d
     - name: Notify
       uses: appleboy/ssh-action@master
