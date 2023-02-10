@@ -58,10 +58,9 @@ class RecipeFilter(FilterSet):
     def filter_tags(self, queryset):
         """Используется в filter_queryset """
         tags = self.request.query_params.getlist('tags')
-        queryset = queryset.filter(
+        return queryset.filter(
             tags__slug__in=tags
         ).distinct()
-        return queryset
 
     def filter_queryset(self, queryset):
         shop_cart = self.form.cleaned_data.get('is_in_shopping_cart')
