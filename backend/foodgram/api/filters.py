@@ -8,7 +8,6 @@ class RecipeFilter(FilterSet):
     is_favorited = CharFilter(method='get_favorited')
     is_in_shopping_cart = CharFilter(method='get_shop_cart')
     author = CharFilter(method='get_author')
-    tags = CharFilter(method='get_tags')
 
     class Meta:
         model = Recipe
@@ -17,7 +16,6 @@ class RecipeFilter(FilterSet):
             'is_favorited',
             'is_in_shopping_cart',
             'author',
-            'tags'
         ]
 
     def get_favorited(self, queryset, name, value):
@@ -50,10 +48,6 @@ class RecipeFilter(FilterSet):
                         .filter(user=user).values('recipe__id'))
             )
         return queryset.none()
-
-    def get_tags(self, queryset, name, value):
-        """Заглушка для поля."""
-        return queryset
 
     def filter_tags(self, queryset):
         """Используется в filter_queryset """
